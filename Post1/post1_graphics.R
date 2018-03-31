@@ -37,14 +37,11 @@ country_list <- intersect(country_list_1, country_list_2)
 
 # Definindo de forma geral o gráfico
 # 1) Filtrando por anos e pela lista de países
-# 
 # 2) Reordenando a variável continent pela maior mediana em doláres diários
-# 
 # 3) inicializando o gráfico: ggplot()
-# 
 # 4) Colocando o tema do Wall Street Journal (Por quê? Porque eu gosto.)
-# 
 # 5) Removendo o nome do eixo x
+# 
 p <- gapminder %>%
   filter(year %in% c(past_year, present_year) &
            country %in% country_list) %>%
@@ -55,17 +52,11 @@ p <- gapminder %>%
 
 # Agora o gráfico mesmo
 # 1) Inicializando o gráfico boxplot
-# 
 # 2) Ajustando cores conforme o conjunto gerador aleatoriamente
-# 
 # 3) Título e subtítulo do gráfico (ggtitle)
-# 
 # 4) Ajuste os nomes no eixo x (traduzindo para português)
-# 
 # 5) Reposicionando os nomes no eixo x
-# 
 # 6) Mudando a escala do eixo y para logarítmica, renomeando para US$
-# 
 # 7) Marcando a linha da pobreza extrema
 # 
 p1 <- p + geom_boxplot(aes(continent, dollars_per_day,  fill = factor(year))) +
@@ -81,5 +72,5 @@ p1 <- p + geom_boxplot(aes(continent, dollars_per_day,  fill = factor(year))) +
                      labels = c("US$ 1", "US$ 8", "US$ 64")) +
   geom_hline(yintercept = 1, color = "darkred", size = 1)
 
-# Apresentando, o gráfico pronto
+# Apresentando o gráfico pronto
 print(p1)
