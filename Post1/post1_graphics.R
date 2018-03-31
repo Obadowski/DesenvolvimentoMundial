@@ -8,6 +8,11 @@ library(ggrepel)
 library(dslabs)
 library(wesanderson)
 
+# Ajustando semente para geração randômica de cores
+set.seed(3)
+gen_colors = sample(rainbow(5))
+print(gen_colors)
+
 # Obtendo base de dados da Gapminder
 data(gapminder)
 
@@ -15,59 +20,66 @@ data(gapminder)
 gapminder <- gapminder %>%
   mutate(dollars_per_day = gdp/population/365)
 
-# Produzindo data.frame com dados de mortalidade infantil e PIB presentes
-# Países sem dados não serão analisados.
-gap_no_na <- gapminder %>%
-  filter(!is.na(infant_mortality) & !is.na(gdp))
+# Existem muitos mais países em 2010 do que em 1970. Isto devido a fusão ou separação
+# de nações ocorridas no início da década de 1990 pela queda URSS
+# Além disso, muitos países não tinha informações públicas sobre suas
+#   características em 1970.
+# Consequentemente, é necessário remover países que não aparecem nas duas listas
+#   simultaneamente. para isso, pode-se usar a função intersect
+past_year = 1970
+present_year = 2010
 
-# Os dados mais recentes da maioria dos países é de 2011. Logo, analisaremos este ano.
+country_list_1 <- gapminder %>%
+  filter(year == past_year & !is.na(dollars_per_day)) %>% .$country
+country_list_2 <- gapminder %>%
+  filter(year == present_year & !is.na(dollars_per_day)) %>% .$country
+country_list <- intersect(country_list_1, country_list_2)
 
-# Gerando padrão de cores para o gráfico
-set.seed(4)
-gen_colors = sample(rainbow(5))
+# Definindo de forma geral o gráfico
+# 1) Filtrando por anos e pela lista de países
+# 
+# 2) Reordenando a variável continent pela maior mediana em doláres diários
+# 
+# 3) inicializando o gráfico: ggplot()
+# 
+# 4) Colocando o tema do Wall Street Journal (Por quê? Porque eu gosto.)
+# 
+# 5) Removendo o nome do eixo x
+p <- gapminder %>%
+  filter(year %in% c(past_year, present_year) &
+           country %in% country_list) %>%
+  mutate(continent = reorder(continent, dollars_per_day, FUN = median)) %>%
+  ggplot() +
+  theme_wsj(color = "white") +
+  xlab("")
 
-# Por etapas
-# 1) Filtrar o ano: 2011
+# Agora o gráfico mesmo
+# 1) Inicializando o gráfico boxplot
 # 
-# 2) Definir o mapeamento estético, eixo x, eixo y, padrão de cores,
-#   x: coluna fertilidade
-#   y: Expectativa de vida
-#   padrão de cores: por continente
-#   
-# 3) Gráfico de pontos (scatter plot)
+# 2) Ajustando cores conforme o conjunto gerador aleatoriamente
 # 
-# 4) geom_label_repel: tudo aquilo apenas para marcar Brasil, numa caixa usando uma linha para
-# identificar o ponto
+# 3) Título e subtítulo do gráfico (ggtitle)
 # 
-# 5) Tema: Semelhante ao do Wall Street Journal + nome dos eixos
+# 4) Ajuste os nomes no eixo x (traduzindo para português)
 # 
-# 6) Título e eixos (ggtitle, xlab e ylab)
+# 5) Reposicionando os nomes no eixo x
 # 
-# 7) Organização das cores usando o padrão definido em gen_colors,
-#   Organização e tradução dos nomes dos continentes
+# 6) Mudando a escala do eixo y para logarítmica, renomeando para US$
 # 
-p1 <- gap_no_na %>%
-  filter(year == 2011) %>%
-  ggplot(aes(x = fertility,
-             y = life_expectancy,
-             color = continent,
-             size = population)) +
-  geom_point(show.legend = FALSE) +
-  geom_label_repel(aes(label = ifelse(country %in% c("Brazil"), "Brasil", '')),
-                   box.padding = 1, point.padding = 0.5,
-                   show.legend = FALSE) +
-  theme_wsj() + theme(axis.title=element_text(size=12)) +
-  ggtitle("Nascimentos x Expectativa de vida", subtitle = "2011") +
-  xlab("Taxa de Natalidade") +
-  ylab("Expectativa de vida") +
-  scale_color_manual(values = gen_colors,
-                     name = "",
-                     breaks = c("Africa", "Americas", "Asia", "Europe", "Oceania"),
-                     labels = c("África", "Américas", "Ásia", "Europa", "Oceania"))
+# 7) Marcando a linha da pobreza extrema
+# 
+p1 <- p + geom_boxplot(aes(continent, dollars_per_day,  fill = factor(year))) +
+  scale_fill_manual(values= gen_colors,
+                    name = '') +
+  ggtitle("Evolução da Renda", subtitle = "Distribuição por continentes") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.text = element_text(size = 14)) +
+  scale_x_discrete(breaks = c("Africa", "Americas", "Asia", "Europe", "Oceania"),
+                   labels = c("África", "Américas","Ásia", "Europa", "Oceania")) +
+  scale_y_continuous(trans = "log2", 
+                     breaks = c(1, 8, 64),
+                     labels = c("US$ 1", "US$ 8", "US$ 64")) +
+  geom_hline(yintercept = 1, color = "darkred", size = 1)
 
-# Mostra o gráfico
+# Apresentando, o gráfico pronto
 print(p1)
-
-
-# Segundo gráfico
-
