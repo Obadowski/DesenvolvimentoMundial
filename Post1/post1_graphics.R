@@ -8,6 +8,12 @@ library(ggrepel)
 library(dslabs)
 library(wesanderson)
 
+#Definindo algumas variáveis importantes
+# Pobreza extrema, UNESCO, 1 dólar diário per capita
+# Pobreza segundo Banco Mundial, 5.5 doláres diários per capita.
+ext_poverty <- 1
+poverty_WB <- 5.5
+
 # Ajustando semente para geração randômica de cores
 set.seed(3)
 gen_colors = sample(rainbow(5))
@@ -70,7 +76,49 @@ p1 <- p + geom_boxplot(aes(continent, dollars_per_day,  fill = factor(year))) +
   scale_y_continuous(trans = "log2", 
                      breaks = c(1, 8, 64),
                      labels = c("US$ 1", "US$ 8", "US$ 64")) +
-  geom_hline(yintercept = 1, color = "darkred", size = 1)
+  geom_hline(yintercept = ext_poverty, color = "darkred", size = 1, linetype = "solid") +
+  geom_hline(yintercept = poverty_WB, color = "darkgreen", size = 1, linetype = "dashed")
 
 # Apresentando o gráfico pronto
 print(p1)
+
+# E o planeta todo?
+
+p2 <- p +
+  geom_boxplot(aes("Mundo", dollars_per_day, fill = factor(year)), width = 0.3) +
+  scale_fill_manual(values= gen_colors,
+                    name = '') +
+  ggtitle("Evolução da Renda", subtitle = "1970 e 2010") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.text = element_text(size = 14)) +
+  scale_y_continuous(trans = "log2", 
+                     breaks = c(1, 8, 64),
+                     labels = c("US$ 1", "US$ 8", "US$ 64")) +
+  geom_hline(yintercept = ext_poverty, color = "darkred", size = 1, linetype = "solid") +
+  geom_hline(yintercept = poverty_WB, color = "darkgreen", size = 1, linetype = "dashed")
+  
+print(p2)
+
+# Verificando alguns parâmetros
+ex_poors2010 <- gapminder %>%
+  filter(year == present_year & dollars_per_day <= ext_poverty)
+ex_poors1970 <- gapminder %>%
+  filter(year == past_year & dollars_per_day <= ext_poverty)
+
+poor_WB2010 <- gapminder %>%
+  filter(year == present_year & dollars_per_day <= poverty_WB)
+poor_WB1970 <- gapminder %>%
+  filter(year == past_year & dollars_per_day <= poverty_WB)
+
+world_2010 <- gapminder %>%
+  filter(year == present_year)
+world_1970 <- gapminder %>%
+  filter(year == past_year)
+
+sum(ex_poors2010$population, na.rm = TRUE)/sum(world_2010$population, na.rm = TRUE)
+sum(poor_WB2010$population, na.rm = TRUE)/sum(world_2010$population, na.rm = TRUE)
+
+sum(ex_poors1970$population, na.rm = TRUE)/sum(world_1970$population, na.rm = TRUE)
+sum(poor_WB1970$population, na.rm = TRUE)/sum(world_1970$population, na.rm = TRUE)
+
+
